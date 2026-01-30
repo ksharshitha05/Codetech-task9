@@ -1,0 +1,104 @@
+Task 9: Random Forest – Credit Card Fraud detection
+🔹 Cell 1: Import Required Libraries
+Python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, precision_score, recall_score, f1_score
+from sklearn.preprocessing import StandardScaler
+import joblib
+🔹 Cell 2: Load Dataset
+Python
+data = pd.read_csv("creditcard.csv")
+
+print("Dataset Shape:", data.shape)
+data.head()
+🔹 Cell 3: Check Class Imbalance
+Python
+class_counts = data['Class'].value_counts()
+print(class_counts)
+
+plt.figure()
+class_counts.plot(kind='bar')
+plt.title("Fraud vs Non-Fraud Count")
+plt.xlabel("Class (0 = Non-Fraud, 1 = Fraud)")
+plt.ylabel("Count")
+plt.show()
+🔹 Cell 4: Separate Features and Target
+Python
+X = data.drop('Class', axis=1)
+y = data['Class']
+🔹 Cell 5: Train-Test Split (Stratified)
+Python
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+print("Train set:", X_train.shape)
+print("Test set:", X_test.shape)
+🔹 Cell 6: Feature Scaling
+Python
+scaler = StandardScaler()
+
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+🔹 Cell 7: Baseline Model – Logistic Regression
+Python
+lr = LogisticRegression(max_iter=1000)
+lr.fit(X_train_scaled, y_train)
+
+y_pred_lr = lr.predict(X_test_scaled)
+
+print("Logistic Regression Performance:")
+print(classification_report(y_test, y_pred_lr))
+🔹 Cell 8: Random Forest Model
+Python
+rf = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42,
+    n_jobs=-1
+)
+
+rf.fit(X_train, y_train)
+
+y_pred_rf = rf.predict(X_test)
+
+print("Random Forest Performance:")
+print(classification_report(y_test, y_pred_rf))
+🔹 Cell 9: Compare Models
+Python
+print("Model Comparison:\n")
+
+print("Logistic Regression:")
+print("Precision:", precision_score(y_test, y_pred_lr))
+print("Recall:", recall_score(y_test, y_pred_lr))
+print("F1-score:", f1_score(y_test, y_pred_lr))
+
+print("\nRandom Forest:")
+print("Precision:", precision_score(y_test, y_pred_rf))
+print("Recall:", recall_score(y_test, y_pred_rf))
+print("F1-score:", f1_score(y_test, y_pred_rf))
+🔹 Cell 10: Feature Importance Plot
+Python
+importances = rf.feature_importances_
+features = X.columns
+
+feature_df = pd.DataFrame({
+    'Feature': features,
+    'Importance': importances
+}).sort_values(by='Importance', ascending=False).head(10)
+
+plt.figure(figsize=(8,5))
+plt.barh(feature_df['Feature'], feature_df['Importance'])
+plt.gca().invert_yaxis()
+plt.title("Top 10 Feature Importances (Random Forest)")
+plt.xlabel("Importance")
+plt.show()
+🔹 Cell 11: Save the Model
+Python
+joblib.dump(rf, "fraud_detection_model.pkl")
+print("Model saved as fraud_detection_model.pkl")
